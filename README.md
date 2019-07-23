@@ -1,1 +1,0 @@
-# spartan-edge-accelerator-examples
