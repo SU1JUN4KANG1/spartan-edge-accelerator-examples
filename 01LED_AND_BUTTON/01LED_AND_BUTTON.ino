@@ -1,5 +1,5 @@
 /*
-  led-and-button
+  01LED_AND_BUTTON
 
   use button USER1 to control LED1/2 reverse
 
@@ -23,9 +23,14 @@ enum {
   BUTTON_USER1 = 0x10,  
   BUTTON_USER2 = 0x20,
   BUTTON_RESET = 0x40,
+  
+  // for retain the last 6 bit 
+  FLAG = 0x3F, 
 
-  FLAG1 = 0x3F, // for retain the last 6 bit 
-  FLAG2 = 0xC0, // for clear the last 6 bit
+  //retain the Sixth bit (gport_b[6] J1 FPGA_LED1)
+  LED1_FLAG = 0x40, 
+  //retain the Seventh bit (gport_b[7] A13 FPGA_LED2)
+  LED2_FLAG = 0x80, 
 
   WRITE_ADDR = 0b10000000,
 };
@@ -94,7 +99,8 @@ void setup() {
   Wire.begin();
 }
 
-unsigned leds = 0x80;
+unsigned LED1 =0x40;
+unsigned LED2 =0x80;
 // the loop routine runs over and over again forever:
 void loop() { 
   unsigned v;
@@ -105,9 +111,10 @@ void loop() {
     // read LED register data 
     v = regRead(GPB_ODATA); 
     // turn the LED reverse
-    regWrite(GPB_ODATA, (v & FLAG1) | (leds & FLAG2));  
+    regWrite(GPB_ODATA, (v & FLAG) | (LED1 & LED1_FLAG) | (LED2 & LED2_FLAG));  
     // ~LED
-    leds = ~leds;        
+    LED1 = ~LED1;  
+    LED2 = ~LED2;       
   }
   
   // wait 250ms 

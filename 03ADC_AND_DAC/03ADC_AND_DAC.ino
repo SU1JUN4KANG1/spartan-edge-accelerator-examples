@@ -49,6 +49,7 @@ unsigned regRead(int address) {
 /* write register */
 unsigned regWrite(int address, int value) {
   unsigned v;
+  
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
   //  send in the address and value via SPI:
@@ -91,51 +92,50 @@ void setup() {
 }
 
 /* read ADC_data and return Voltage */
-unsigned long /* Voltage(ms) */readADC_data(void){
-  int adc_data;
-  int Voltage;
+unsigned long /* Voltage(mv) */readAdcData(void){
+  unsigned long adcData;
   
   // read ADC value
-  adc_data = regRead(ADC_DATA); 
-
-  // ADC_data Transform to  Voltage(ms)
-  /*
-   * if yu want to know detail,
-   * you can come [http://www.ti.com/product/ADC1173]
-   */
-  Voltage = (unsigned long)adc_data * 3300 / 256; 
-
-  return Voltage;
+  adcData = regRead(ADC_DATA); 
+  
+  return adcData;
 }
 
 /* write Voltage(mv) to DAC */
-void writeDAC_data(unsigned long Volt_val/* Voltage(ms) */){
-
+void writeDacData(unsigned long voltVal/* Voltage(mv) */){
   /*
    * if yu want to know detail,
    * you can come [http://www.ti.com/product/DAC7311]
    */
   // DATA1 first
-  regWrite(DAC_DATA1, (Volt_val >> 2) & 0x3F);
+  regWrite(DAC_DATA1, (voltVal >> 2) & 0x3F);
   // DATA0 last
-  regWrite(DAC_DATA0, (Volt_val << 6) & 0xC0);
+  regWrite(DAC_DATA0, (voltVal << 6) & 0xC0);
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
-  unsigned long Volt_val;
-
+  unsigned long voltVal;
+  int adcData;
+  
   // read ADC value
-  Volt_val = readADC_data();
-
+  adcData = readAdcData();
+  
+  // ADC_data Transform to  Voltage(mv)
+  /*
+   * if yu want to know detail,
+   * you can come [http://www.ti.com/product/ADC1173]
+   */
+  voltVal = (unsigned long)adcData * 179 / 10; 
+  
    /* output Voltage(ms) by Serial */
   Serial.print("ADC : ");
-  Serial.print(Volt_val);
+  Serial.print(voltVal);
   Serial.print(" mV ");
 
   // output DAC val
   // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
-  writeDAC_data(Volt_val);
+  writeDacData(adcData);
   
   // Change other line
   Serial.println(); 
