@@ -20,23 +20,24 @@ enum {
   GPE_ODATA,
   GPE_IDATA,
 
-  button_USER1 = 0x10,  
-  button_USER2 = 0x20,
-  button_RESET = 0x40,
+  BUTTON_USER1 = 0x10,  
+  BUTTON_USER2 = 0x20,
+  BUTTON_RESET = 0x40,
 
-  LED1 = 0x3F,
-  LED2 = 0xC0,
+  FLAG1 = 0x3F, // for retain the last 6 bit 
+  FLAG2 = 0xC0, // for clear the last 6 bit
 
   WRITE_ADDR = 0b10000000,
 };
 
-const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
+// SPI2GPIO write
+const byte WRITE = WRITE_ADDR;  
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
 const int resetPin       =  9;
 
-/*read register*/
+/* read register */
 unsigned regRead(int address) {
   unsigned v;
 
@@ -50,7 +51,7 @@ unsigned regRead(int address) {
   return v;
 }
 
-/*write register*/
+/* write register */
 unsigned regWrite(int address, int value) {
   unsigned v;
   // take the SS pin low to select the chip:
@@ -78,7 +79,6 @@ void setup() {
   SPI.begin();
   SPI.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE3));
 
-
   // set the reset Pin as an output
   pinMode(resetPin,       OUTPUT);
 
@@ -97,16 +97,19 @@ void setup() {
 unsigned leds = 0x80;
 // the loop routine runs over and over again forever:
 void loop() { 
-
   unsigned v;
- 
-  if (0 == (regRead(GPE_IDATA) & button_USER1))  //Press USER1, led will reverse
+  
+  // Press USER1, led will reverse
+  if (0 == (regRead(GPE_IDATA) & BUTTON_USER1))  
   {
-     
-    v = regRead(GPB_ODATA); //read LED register data 
-    regWrite(GPB_ODATA, (v & LED1) | (leds & LED2));  //turn the LED reverse
-    leds = ~leds;       //~LED 
+    // read LED register data 
+    v = regRead(GPB_ODATA); 
+    // turn the LED reverse
+    regWrite(GPB_ODATA, (v & FLAG1) | (leds & FLAG2));  
+    // ~LED
+    leds = ~leds;        
   }
   
-   delay(250);// wait 250ms 
+  // wait 250ms 
+  delay(250);
 }

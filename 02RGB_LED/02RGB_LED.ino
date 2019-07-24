@@ -18,13 +18,14 @@ enum {
   WRITE_ADDR = 0b10000000,
 };
 
-const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
+// SPI2GPIO write
+const byte WRITE = WRITE_ADDR;   
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
 const int resetPin       =  9;
 
-/*read register*/
+/* read register */
 unsigned regRead(int address) {
   unsigned v;
 
@@ -38,9 +39,10 @@ unsigned regRead(int address) {
   return v;
 }
 
-/*write register*/
+/* write register */
 unsigned regWrite(int address, int value) {
   unsigned v;
+  
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
   //  send in the address and value via SPI:
@@ -57,7 +59,6 @@ void setup() {
 
   // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-
 
   // set the slaveSelectPin as an output:
   pinMode(slaveSelectPin, OUTPUT);
@@ -79,26 +80,25 @@ void setup() {
 
 // the loop routine runs over and over again forever:
 void loop() {
-  
   static unsigned long color = 0xFFUL;
   
-  /*set RGB1 value B->R->G*/
+  /* set RGB1 value B->R->G */
   regWrite(SK6805_CTRL, 0x0);
-  regWrite(SK6805_DATA, (color >>  3) & 0x1F);//blue
+  regWrite(SK6805_DATA, (color >>  3) & 0x1F);// blue
   regWrite(SK6805_CTRL, 0x1);
-  regWrite(SK6805_DATA, (color >> 11) & 0x1F);//red
+  regWrite(SK6805_DATA, (color >> 11) & 0x1F);// red
   regWrite(SK6805_CTRL, 0x2);
-  regWrite(SK6805_DATA, (color >> 19) & 0x1F);//green
+  regWrite(SK6805_DATA, (color >> 19) & 0x1F);// green
 
-  /*set RGB2 value R->G->B*/
+  /* set RGB2 value R->G->B */
   regWrite(SK6805_CTRL, 0x3);
-  regWrite(SK6805_DATA, (color >> 19) & 0x1F);//blue
+  regWrite(SK6805_DATA, (color >> 19) & 0x1F);// blue
   regWrite(SK6805_CTRL, 0x4);
-  regWrite(SK6805_DATA, (color >>  3) & 0x1F);//red
+  regWrite(SK6805_DATA, (color >>  3) & 0x1F);// red
   regWrite(SK6805_CTRL, 0x5);
-  regWrite(SK6805_DATA, (color >> 11) & 0x1F);//green
+  regWrite(SK6805_DATA, (color >> 11) & 0x1F);// green
 
-  /*set color value*/
+  /* set color value */
   switch (color) {
   case 0x0000FFUL: color = 0x00FF00UL; break;
   case 0x00FF00UL: color = 0xFF0000UL; break;
@@ -106,6 +106,7 @@ void loop() {
   default:
     color = 0xFFUL; break;
   }
-
-  delay(1500);    // delay in between reads for stability
+  
+  // delay in between reads for stability
+  delay(1500);    
 }

@@ -25,13 +25,14 @@ enum {
   WRITE_ADDR = 0b10000000,
 };
 
-const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
+// SPI2GPIO write
+const byte WRITE = WRITE_ADDR;   
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
 const int resetPin       =  9;
 
-/*read register*/
+/* read register */
 unsigned regRead(int address) {
   unsigned v;
 
@@ -45,7 +46,7 @@ unsigned regRead(int address) {
   return v;
 }
 
-/*write register*/
+/* write register */
 unsigned regWrite(int address, int value) {
   unsigned v;
   // take the SS pin low to select the chip:
@@ -89,26 +90,26 @@ void setup() {
   Wire.begin();
 }
 
-/*read ADC_data and return Voltage*/
-unsigned long /*Voltage(ms)*/readADC_data(void){
+/* read ADC_data and return Voltage */
+unsigned long /* Voltage(ms) */readADC_data(void){
   int adc_data;
   int Voltage;
   
-  //read ADC value
+  // read ADC value
   adc_data = regRead(ADC_DATA); 
 
-  //ADC_data Transform to  Voltage(ms)
+  // ADC_data Transform to  Voltage(ms)
   /*
    * if yu want to know detail,
-   * you can come [http://www.ti.com/product/DAC7311]
+   * you can come [http://www.ti.com/product/ADC1173]
    */
-  Voltage =(unsigned long)adc_data * 3300 / 256; 
+  Voltage = (unsigned long)adc_data * 3300 / 256; 
 
   return Voltage;
 }
 
-/*write Voltage(mv) to DAC*/
-void writeDAC_data(unsigned long Volt_val/*Voltage(ms)*/){
+/* write Voltage(mv) to DAC */
+void writeDAC_data(unsigned long Volt_val/* Voltage(ms) */){
 
   /*
    * if yu want to know detail,
@@ -124,18 +125,20 @@ void writeDAC_data(unsigned long Volt_val/*Voltage(ms)*/){
 void loop() {
   unsigned long Volt_val;
 
-  //read ADC value
-  Volt_val =readADC_data();
+  // read ADC value
+  Volt_val = readADC_data();
 
-   /*output Voltage(ms) by Serial*/
+   /* output Voltage(ms) by Serial */
   Serial.print("ADC : ");
   Serial.print(Volt_val);
   Serial.print(" mV ");
 
-  //output DAC val
+  // output DAC val
   // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
   writeDAC_data(Volt_val);
-
-  Serial.println(); //Change other line
-  delay(1500);      // delay in between reads for stability
+  
+  // Change other line
+  Serial.println(); 
+  // delay in between reads for stability
+  delay(1500);      
 }
