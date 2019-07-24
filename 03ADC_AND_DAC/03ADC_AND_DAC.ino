@@ -103,15 +103,6 @@ unsigned long /*Voltage(ms)*/readADC_data(void){
    * you can come [http://www.ti.com/product/DAC7311]
    */
   Voltage =(unsigned long)adc_data * 3300 / 256; 
-  
-  /*output info by Serial*/
-  Serial.print("ADC : ");
-  Serial.print(Voltage);
-  Serial.print(" mV (");
-  Serial.print(adc_data);
-  Serial.print(", 0x");
-  Serial.print(adc_data, HEX);
-  Serial.println(")");
 
   return Voltage;
 }
@@ -135,6 +126,11 @@ void loop() {
 
   //read ADC value
   Volt_val =readADC_data();
+
+   /*output Voltage(ms) by Serial*/
+  Serial.print("ADC : ");
+  Serial.print(Volt_val);
+  Serial.print(" mV ");
 
   //output DAC val
   // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 

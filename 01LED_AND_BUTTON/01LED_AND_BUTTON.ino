@@ -20,7 +20,12 @@ enum {
   GPE_ODATA,
   GPE_IDATA,
 
-  is_USER1 =0x10,  
+  button_USER1 =0x10,  
+  button_USER2 =0x20,
+  button_RESET =0x40,
+
+  LED1 =0x3F,
+  LED2 =0xC0,
 
   WRITE_addr =0b10000000,
 };
@@ -95,11 +100,11 @@ void loop() {
 
   unsigned v;
  
-  if (0 == (regRead(GPE_IDATA) & is_USER1))  //Press USER1, led will reverse
+  if (0 == (regRead(GPE_IDATA) & button_USER1))  //Press USER1, led will reverse
   {
      
     v = regRead(GPB_ODATA); //read LED register data 
-    regWrite(GPB_ODATA, (v & 0x3F) | (leds & 0xC0));  //turn the LED reverse
+    regWrite(GPB_ODATA, (v & LED1) | (leds & LED2));  //turn the LED reverse
     leds = ~leds;       //~LED 
   }
   
