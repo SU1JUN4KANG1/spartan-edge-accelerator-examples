@@ -14,9 +14,11 @@
 enum {
   SK6805_CTRL = 0x14,
   SK6805_DATA,
+
+  WRITE_addr =0b10000000,
 };
 
-const byte WRITE = 0b10000000;   // SPI2GPIO write
+const byte WRITE = WRITE_addr;   // SPI2GPIO write
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;

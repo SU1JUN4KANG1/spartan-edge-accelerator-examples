@@ -1,8 +1,8 @@
 /*
-  led-and-button
+  switch testing
 
-  use button USER1 to control LED1/2 reverse
-
+  check the switch and ouput infomation by Serial
+  
   The MIT License (MIT)
   Copyright (C) 2019  Seeed Technology Co.,Ltd.
 */
@@ -12,17 +12,16 @@
 #include <Wire.h>
 
 enum {
-  GPB_OE = 0x04,
-  GPB_ODATA,
-  GPB_IDATA,
-
   GPE_OE = 0x10,
   GPE_ODATA,
   GPE_IDATA,
 
-  is_USER1 =0x10,  
-
   WRITE_addr =0b10000000,
+
+  is_key1 =0x01,
+  is_key2 =0x02,
+  is_key3 =0x04,
+  is_key4 =0x08,
 };
 
 const byte WRITE = WRITE_addr;   // SPI2GPIO write
@@ -31,7 +30,6 @@ const byte WRITE = WRITE_addr;   // SPI2GPIO write
 const int slaveSelectPin = 10;
 const int resetPin       =  9;
 
-/*read register*/
 unsigned regRead(int address) {
   unsigned v;
 
@@ -45,7 +43,6 @@ unsigned regRead(int address) {
   return v;
 }
 
-/*write register*/
 unsigned regWrite(int address, int value) {
   unsigned v;
   // take the SS pin low to select the chip:
@@ -58,12 +55,10 @@ unsigned regWrite(int address, int value) {
   return v;
 }
 
-
 // the setup routine runs once when you press reset:
 void setup() {
   int v;
-
-  // initialize serial communication at 115200 bits per second:
+  
   Serial.begin(115200);
 
   // set the slaveSelectPin as an output:
@@ -82,26 +77,56 @@ void setup() {
   delay(1);
   digitalWrite(resetPin, HIGH);
 
-  /* LED1/2 as output */
-  v = regRead(GPB_OE);
-  regWrite(GPB_OE, v | 0xC0);
-  
   Wire.begin();
 }
 
-unsigned leds = 0x80;
-// the loop routine runs over and over again forever:
-void loop() { 
-
+/*check the switch*/
+int switch_chk(void) {
   unsigned v;
- 
-  if (0 == (regRead(GPE_IDATA) & is_USER1))  //Press USER1, led will reverse
-  {
-     
-    v = regRead(GPB_ODATA); //read LED register data 
-    regWrite(GPB_ODATA, (v & 0x3F) | (leds & 0xC0));  //turn the LED reverse
-    leds = ~leds;       //~LED 
+
+  //read four switchs data
+  v = regRead(GPE_IDATA);
+  if ((v & 0x7F) != 0x70) //if read error ,retun -1
+    return -1;
+
+  Serial.print("Switch on K1 ");
+  for (;;)  if (0 != (regRead(GPE_IDATA) & is_key1)) break;//loop forever untill key1 Switched
+  Serial.println("OK");
+
+  Serial.print("Switch on K2 ");
+  for (;;)  if (0 != (regRead(GPE_IDATA) & is_key2)) break;//loop forever untill key2 Switched
+  Serial.println("OK");
+
+  Serial.print("Switch on K3 ");
+  for (;;)  if (0 != (regRead(GPE_IDATA) & is_key3)) break;//loop forever untill key3 Switched
+  Serial.println("OK");
+
+  Serial.print("Switch on K4 ");
+  for (;;)  if (0 != (regRead(GPE_IDATA) & is_key4)) break;//loop forever untill key4 Switched
+  Serial.println("OK");
+
+  return 0;
+}
+
+static int switch_checked = 0;  //avoiding checking looping
+// the loop routine runs over and over again forever:
+void loop() {
+  int r;
+
+  /*switch checking and output info by Serial*/
+  if (switch_checked == 0) {
+    Serial.print("Switch : ");
+    Serial.println();
+    r = switch_chk();   //checking
+    if (r < 0) {
+      Serial.print("FAIL ");
+      Serial.println(r);
+    } else {
+      Serial.println("OK");
+    }
+    switch_checked = 1; //stop checking
   }
-  
-   delay(250);// wait 250ms 
+
+  Serial.println(); //change a line
+  delay(1500);      // delay 1.5 s
 }

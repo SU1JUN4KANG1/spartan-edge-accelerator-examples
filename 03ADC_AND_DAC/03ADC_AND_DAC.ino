@@ -21,9 +21,11 @@ enum {
   DAC_DATA1,
 
   ADC_DATA = 0x1F,
+
+  WRITE_addr =0b10000000,
 };
 
-const byte WRITE = 0b10000000;   // SPI2GPIO write
+const byte WRITE = WRITE_addr;   // SPI2GPIO write
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
@@ -87,26 +89,56 @@ void setup() {
   Wire.begin();
 }
 
-// the loop routine runs over and over again forever:
-void loop() {
-  int r;
-
-  r = regRead(ADC_DATA); //read ADC value
+/*read ADC_data and return Voltage*/
+unsigned long /*Voltage(ms)*/readADC_data(void){
+  int adc_data;
+  int Voltage;
   
-  /*output info by Serial, like */
+  //read ADC value
+  adc_data = regRead(ADC_DATA); 
+
+  //ADC_data Transform to  Voltage(ms)
+  /*
+   * if yu want to know detail,
+   * you can come [http://www.ti.com/product/DAC7311]
+   */
+  Voltage =(unsigned long)adc_data * 3300 / 256; 
+  
+  /*output info by Serial*/
   Serial.print("ADC : ");
-  Serial.print((unsigned long)r * 3300 / 256);
+  Serial.print(Voltage);
   Serial.print(" mV (");
-  Serial.print(r);
+  Serial.print(adc_data);
   Serial.print(", 0x");
-  Serial.print(r, HEX);
+  Serial.print(adc_data, HEX);
   Serial.println(")");
 
-  // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
+  return Voltage;
+}
+
+/*write Voltage(mv) to DAC*/
+void writeDAC_data(unsigned long Volt_val/*Voltage(ms)*/){
+
+  /*
+   * if yu want to know detail,
+   * you can come [http://www.ti.com/product/DAC7311]
+   */
   // DATA1 first
-  regWrite(DAC_DATA1, (r >> 2) & 0x3F);
+  regWrite(DAC_DATA1, (Volt_val >> 2) & 0x3F);
   // DATA0 last
-  regWrite(DAC_DATA0, (r << 6) & 0xC0);
+  regWrite(DAC_DATA0, (Volt_val << 6) & 0xC0);
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
+  unsigned long Volt_val;
+
+  //read ADC value
+  Volt_val =readADC_data();
+
+  //output DAC val
+  // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
+  writeDAC_data(Volt_val);
 
   Serial.println(); //Change other line
   delay(1500);      // delay in between reads for stability
