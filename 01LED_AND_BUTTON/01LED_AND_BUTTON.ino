@@ -20,17 +20,17 @@ enum {
   GPE_ODATA,
   GPE_IDATA,
 
-  button_USER1 =0x10,  
-  button_USER2 =0x20,
-  button_RESET =0x40,
+  button_USER1 = 0x10,  
+  button_USER2 = 0x20,
+  button_RESET = 0x40,
 
-  LED1 =0x3F,
-  LED2 =0xC0,
+  LED1 = 0x3F,
+  LED2 = 0xC0,
 
-  WRITE_addr =0b10000000,
+  WRITE_ADDR = 0b10000000,
 };
 
-const byte WRITE = WRITE_addr;   // SPI2GPIO write
+const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;

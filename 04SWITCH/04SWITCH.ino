@@ -16,15 +16,15 @@ enum {
   GPE_ODATA,
   GPE_IDATA,
 
-  WRITE_addr =0b10000000,
+  WRITE_ADDR =0b10000000,
 
-  is_key1 =0x01,
-  is_key2 =0x02,
-  is_key3 =0x04,
-  is_key4 =0x08,
+  is_key1 = 0x01, 
+  is_key2 = 0x02,
+  is_key3 = 0x04,
+  is_key4 = 0x08,
 };
 
-const byte WRITE = WRITE_addr;   // SPI2GPIO write
+const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;

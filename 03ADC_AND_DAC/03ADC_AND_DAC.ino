@@ -22,10 +22,10 @@ enum {
 
   ADC_DATA = 0x1F,
 
-  WRITE_addr =0b10000000,
+  WRITE_ADDR = 0b10000000,
 };
 
-const byte WRITE = WRITE_addr;   // SPI2GPIO write
+const byte WRITE = WRITE_ADDR;   // SPI2GPIO write
 
 // set pin 10 as the slave select for the digital pot:
 const int slaveSelectPin = 10;
