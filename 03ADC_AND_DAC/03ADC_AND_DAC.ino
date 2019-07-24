@@ -1,8 +1,9 @@
 /*
-  RGBLEDsetting
+  DAC-AND-ADC testing
+ 
+  read ADC information from FPGA and output by Serial
+  write DAC value to FPGA
 
-  set the RGBLED's R,G,B value,which will change the led color
-  
   The MIT License (MIT)
   Copyright (C) 2019  Seeed Technology Co.,Ltd.
 */
@@ -12,8 +13,14 @@
 #include <Wire.h>
 
 enum {
-  SK6805_CTRL = 0x14,
-  SK6805_DATA,
+  GPE_OE = 0x10,
+  GPE_ODATA,
+  GPE_IDATA,
+  
+  DAC_DATA0 = 0x16,
+  DAC_DATA1,
+
+  ADC_DATA = 0x1F,
 };
 
 const byte WRITE = 0b10000000;   // SPI2GPIO write
@@ -52,10 +59,9 @@ unsigned regWrite(int address, int value) {
 // the setup routine runs once when you press reset:
 void setup() {
   int v;
-
+  
   // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
-
 
   // set the slaveSelectPin as an output:
   pinMode(slaveSelectPin, OUTPUT);
@@ -71,39 +77,37 @@ void setup() {
   digitalWrite(resetPin, LOW);
   delay(1);
   digitalWrite(resetPin, HIGH);
-  
+
+  /* Enable ADC1173, set /OE to LOW */
+  regWrite(GPE_OE, 0x80);
+  v = regRead(GPE_IDATA);
+  v &= ~0x80;
+  regWrite(GPE_ODATA, v);
+
   Wire.begin();
 }
 
 // the loop routine runs over and over again forever:
 void loop() {
+  int r;
+
+  r = regRead(ADC_DATA); //read ADC value
   
-  static unsigned long color = 0xFFUL;
-  
-  /*set RGB1 value B->R->G*/
-  regWrite(SK6805_CTRL, 0x0);
-  regWrite(SK6805_DATA, (color >>  3) & 0x1F);//blue
-  regWrite(SK6805_CTRL, 0x1);
-  regWrite(SK6805_DATA, (color >> 11) & 0x1F);//red
-  regWrite(SK6805_CTRL, 0x2);
-  regWrite(SK6805_DATA, (color >> 19) & 0x1F);//green
+  /*output info by Serial, like */
+  Serial.print("ADC : ");
+  Serial.print((unsigned long)r * 3300 / 256);
+  Serial.print(" mV (");
+  Serial.print(r);
+  Serial.print(", 0x");
+  Serial.print(r, HEX);
+  Serial.println(")");
 
-  /*set RGB2 value R->G->B*/
-  regWrite(SK6805_CTRL, 0x3);
-  regWrite(SK6805_DATA, (color >> 19) & 0x1F);//blue
-  regWrite(SK6805_CTRL, 0x4);
-  regWrite(SK6805_DATA, (color >>  3) & 0x1F);//red
-  regWrite(SK6805_CTRL, 0x5);
-  regWrite(SK6805_DATA, (color >> 11) & 0x1F);//green
+  // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
+  // DATA1 first
+  regWrite(DAC_DATA1, (r >> 2) & 0x3F);
+  // DATA0 last
+  regWrite(DAC_DATA0, (r << 6) & 0xC0);
 
-  /*set color value*/
-  switch (color) {
-  case 0x0000FFUL: color = 0x00FF00UL; break;
-  case 0x00FF00UL: color = 0xFF0000UL; break;
-  case 0xFF0000UL: color = 0x0000FFUL; break;
-  default:
-    color = 0xFFUL; break;
-  }
-
-  delay(1500);    // delay in between reads for stability
+  Serial.println(); //Change other line
+  delay(1500);      // delay in between reads for stability
 }
