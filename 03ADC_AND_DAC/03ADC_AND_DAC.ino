@@ -18,7 +18,7 @@ enum {
   GPE_IDATA,
   
   DAC_DATA0 = 0x16,
-  DAC_DATA1,
+  DAC_DATA1 = 0x17,
 
   ADC_DATA = 0x1F,
 
@@ -110,20 +110,20 @@ unsigned long /* Voltage(mv) */readAdcData(void){
 }
 
 /* write Voltage(mv) to DAC */
-void writeDacData(unsigned long voltVal/* Voltage(mv) */){
-  int dacData;
+void writeDacData(unsigned int voltVal/* Voltage(mv) */){
+  unsigned long dacData;
   
   /*
    * Voltage(mv) Transform to ADC_data
    * if yu want to know detail,
    * you can come [http://www.ti.com/product/DAC7311]
    */
-  dacData = voltVal * 4096 / 3300;
-   
+  dacData = (unsigned long)voltVal * 4096 / 3300;
+  
   // DATA1 first
-  regWrite(DAC_DATA1, (dacData >> 2) & 0x3F);
+  regWrite(DAC_DATA1, (dacData >> 6) & 0x3F);
   // DATA0 last
-  regWrite(DAC_DATA0, (dacData << 6) & 0xC0);
+  regWrite(DAC_DATA0, (dacData << 2) & 0xFC);
 }
 
 // the loop routine runs over and over again forever:
@@ -144,7 +144,7 @@ void loop() {
   writeDacData(voltVal);
   
   // Change other line
-  Serial.println(); 
+  Serial.println();  
   // delay in between reads for stability
   delay(1500);      
 }
