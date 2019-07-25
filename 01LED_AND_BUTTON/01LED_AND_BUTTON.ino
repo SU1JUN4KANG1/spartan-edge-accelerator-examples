@@ -24,13 +24,10 @@ enum {
   BUTTON_USER2 = 0x20,
   BUTTON_RESET = 0x40,
   
-  // for retain the last 6 bit 
-  FLAG = 0x3F, 
-
   //retain the Sixth bit (gport_b[6] J1 FPGA_LED1)
-  LED1_FLAG = 0x40, 
+  LED1 = 0x40, 
   //retain the Seventh bit (gport_b[7] A13 FPGA_LED2)
-  LED2_FLAG = 0x80, 
+  LED2 = 0x80, 
 
   WRITE_ADDR = 0b10000000,
 };
@@ -48,7 +45,7 @@ unsigned regRead(int address) {
 
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
-  //  send in the address and value via SPI:
+  // send in the address and value via SPI:
   SPI.transfer(address | 0x0);
   v = SPI.transfer(0x0);
   // take the SS pin high to de-select the chip:
@@ -59,9 +56,10 @@ unsigned regRead(int address) {
 /* write register */
 unsigned regWrite(int address, int value) {
   unsigned v;
+  
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
-  //  send in the address and value via SPI:
+  // send in the address and value via SPI:
   SPI.transfer(address | WRITE);
   v = SPI.transfer(value);
   // take the SS pin high to de-select the chip:
@@ -85,7 +83,7 @@ void setup() {
   SPI.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE3));
 
   // set the reset Pin as an output
-  pinMode(resetPin,       OUTPUT);
+  pinMode(resetPin, OUTPUT);
 
   // reset FPGA logic
   digitalWrite(resetPin, LOW);
@@ -99,8 +97,8 @@ void setup() {
   Wire.begin();
 }
 
-unsigned LED1 =0x40;
-unsigned LED2 =0x80;
+unsigned led1 = 0x40;
+unsigned led2 = 0x80;
 // the loop routine runs over and over again forever:
 void loop() { 
   unsigned v;
@@ -111,10 +109,10 @@ void loop() {
     // read LED register data 
     v = regRead(GPB_ODATA); 
     // turn the LED reverse
-    regWrite(GPB_ODATA, (v & FLAG) | (LED1 & LED1_FLAG) | (LED2 & LED2_FLAG));  
+    regWrite(GPB_ODATA, (v & ~(LED1 | LED2)) | (led1 & LED1) | (led2 & LED2));  
     // ~LED
-    LED1 = ~LED1;  
-    LED2 = ~LED2;       
+    led1 = ~led1;  
+    led2 = ~led2;       
   }
   
   // wait 250ms 

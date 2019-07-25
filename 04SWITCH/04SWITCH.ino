@@ -1,5 +1,5 @@
 /*
-  switch testing
+  04SWITCH
 
   check the switch and ouput infomation by Serial
   
@@ -35,7 +35,7 @@ unsigned regRead(int address) {
 
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
-  //  send in the address and value via SPI:
+  // send in the address and value via SPI:
   SPI.transfer(address | 0x0);
   v = SPI.transfer(0x0);
   // take the SS pin high to de-select the chip:
@@ -45,6 +45,7 @@ unsigned regRead(int address) {
 
 unsigned regWrite(int address, int value) {
   unsigned v;
+  
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
   //  send in the address and value via SPI:
@@ -58,7 +59,8 @@ unsigned regWrite(int address, int value) {
 // the setup routine runs once when you press reset:
 void setup() {
   int v;
-  
+
+  // initialize serial communication at 115200 bits per second:
   Serial.begin(115200);
 
   // set the slaveSelectPin as an output:
@@ -69,7 +71,7 @@ void setup() {
   SPI.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE3));
 
   // set the reset Pin as an output
-  pinMode(resetPin,       OUTPUT);
+  pinMode(resetPin, OUTPUT);
 
   // reset FPGA logic
   digitalWrite(resetPin, LOW);
@@ -82,13 +84,18 @@ void setup() {
 /* check the switch */
 int switch_chk(void) {
   unsigned v;
-
-  // read four switchs data
+  
+  /*
+   * read four switchs data
+   * if one of the switchs is 'on' ,retun -1.
+   * please put it to "off", and try again
+   */
   v = regRead(GPE_IDATA);
-  // if read error ,retun -1
-  if ((v & 0x7F) != 0x70) 
-    return -1;
-
+  if ((v & 0x7F) != 0x70){
+      Serial.println("please put switch to off, and try again");
+      return -1;
+    }
+  
   Serial.print("Switch on K1 ");
   // loop forever untill key1 Switched
   for (;;)  if (0 != (regRead(GPE_IDATA) & IS_KEY1)) break;

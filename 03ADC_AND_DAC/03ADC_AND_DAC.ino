@@ -1,5 +1,5 @@
 /*
-  DAC-AND-ADC testing
+  03DAC_AND_DAC
  
   read ADC information from FPGA and output by Serial
   write DAC value to FPGA
@@ -52,7 +52,7 @@ unsigned regWrite(int address, int value) {
   
   // take the SS pin low to select the chip:
   digitalWrite(slaveSelectPin, LOW);
-  //  send in the address and value via SPI:
+  // send in the address and value via SPI:
   SPI.transfer(address | WRITE);
   v = SPI.transfer(value);
   // take the SS pin high to de-select the chip:
@@ -93,24 +93,37 @@ void setup() {
 
 /* read ADC_data and return Voltage */
 unsigned long /* Voltage(mv) */readAdcData(void){
-  unsigned long adcData;
+  int adcData;
+  unsigned long voltage;
   
   // read ADC value
   adcData = regRead(ADC_DATA); 
+
+  /*
+   * ADC_data Transform to  Voltage(mv)
+   * if yu want to know detail,
+   * you can come [http://www.ti.com/product/ADC1173]
+   */
+  voltage = (unsigned long)adcData * 3300 / 256; 
   
-  return adcData;
+  return voltage;
 }
 
 /* write Voltage(mv) to DAC */
 void writeDacData(unsigned long voltVal/* Voltage(mv) */){
+  int dacData;
+  
   /*
+   * Voltage(mv) Transform to ADC_data
    * if yu want to know detail,
    * you can come [http://www.ti.com/product/DAC7311]
    */
+  dacData = voltVal * 4096 / 3300;
+   
   // DATA1 first
-  regWrite(DAC_DATA1, (voltVal >> 2) & 0x3F);
+  regWrite(DAC_DATA1, (dacData >> 2) & 0x3F);
   // DATA0 last
-  regWrite(DAC_DATA0, (voltVal << 6) & 0xC0);
+  regWrite(DAC_DATA0, (dacData << 6) & 0xC0);
 }
 
 // the loop routine runs over and over again forever:
@@ -119,23 +132,16 @@ void loop() {
   int adcData;
   
   // read ADC value
-  adcData = readAdcData();
+  voltVal = readAdcData();
   
-  // ADC_data Transform to  Voltage(mv)
-  /*
-   * if yu want to know detail,
-   * you can come [http://www.ti.com/product/ADC1173]
-   */
-  voltVal = (unsigned long)adcData * 179 / 10; 
-  
-   /* output Voltage(ms) by Serial */
+  /* output Voltage(ms) by Serial */
   Serial.print("ADC : ");
   Serial.print(voltVal);
   Serial.print(" mV ");
 
   // output DAC val
   // DAC-OUT = ADC-IN ,input DAC value ,which is what you read before 
-  writeDacData(adcData);
+  writeDacData(voltVal);
   
   // Change other line
   Serial.println(); 
