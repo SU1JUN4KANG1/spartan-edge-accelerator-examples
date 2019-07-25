@@ -144,7 +144,7 @@ void loop() {
   writeDacData(voltVal);
   
   // Change other line
-  Serial.println();  
+  Serial.println();
   // delay in between reads for stability
-  delay(1500);      
+  delay(1500);
 }
