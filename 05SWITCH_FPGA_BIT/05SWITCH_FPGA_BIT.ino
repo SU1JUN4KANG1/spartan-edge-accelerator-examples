@@ -1,10 +1,10 @@
 /*
   05SWITCH_FPGA_BIT
 
-  using i2c to switch the fpga-bit.
-  you can use Serial to see whether the i2c is working.
-  <top-level-directory-SDcard>/overlay has some fpga-bit, 
-  the boot.py acquiescently load spi2gpio.bit.
+  using i2c to send infomation to ESP32 to switch the fpga-bit.
+  you can see information from ESP32 Serial to see what the infomation you send.
+  <top-level-directory-SDcard>/overlay/ has some fpga-bit, 
+  the boot.py acquiescently load spi2gpio.bit, which depend on the boaed_config.json 
   if you want to load the other one dynamically, you can Refer to this example
   and if you want to load the other one acquiescently,
   you can change the value about overlay_on_boot in boaed_config.json 
@@ -17,24 +17,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
-enum {
-  GPC_OE = 0x08,
-  GPC_ODATA,
-  GPC_IDATA,
-  #define GPC_ALT_UART_TX   0x01
-  #define GPC_ALT_UART_RX   0x02
-  #define GPC_ALT_UART_MASK (GPC_ALT_UART_TX | GPC_ALT_UART_RX)
-  GPC_ALT,
-
-  GPD_OE = 0x0C,
-  GPD_ODATA,
-  GPD_IDATA,
-  
-  UART_DATA = 0x18,
-  #define UART_STAT_TX_BUSY  0x10
-  #define UART_STAT_RX_DV    0x01
-  UART_STAT,
-
+enum {    
   GPZ_OE = 0x1C,
   GPZ_ODATA,
   GPZ_IDATA,
@@ -108,97 +91,26 @@ void setup() {
    */
   regWrite(GPZ_ODATA, 0xC0);
 
-  /* UART alternate pin */
-  regWrite(GPC_ALT, GPC_ALT_UART_MASK);
-
-  regWrite(GPC_OE, 0xFF);
-  regWrite(GPD_OE, 0x01);
-
   Wire.begin();
 }
 
-/*
- * looking for i2c device
- * if success return 0
- * if fail return -1
- */
-int i2c_scan(void) {
-  byte error, address;
-  int nDevices;
-  byte dev_0x20 = 0;
-  byte dev_0x6B = 0;
-
-  nDevices = 0;
-  for(address = 1; address < 127; address++ )
-  {
-    // The i2c_scanner uses the return value of
-    // the Write.endTransmisstion to see if
-    // a device did acknowledge to the address.
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();  // receive the results
-
-    if (error == 0) // success,the address mounted i2c device
-    {
-      Serial.print("0x");
-      if (address<16)
-        Serial.print("0");
-      Serial.print(address,HEX);  // output the address by Serial
-      Serial.print(" ");
-
-      nDevices++;
-      if (address == 0x20) {
-        dev_0x20 = 1;
-      }
-      if (address == 0x6B) {
-        dev_0x6B = 1;
-      }
-    }
-    else if (error==4)  
-    {
-      Serial.print("Unknow error at address 0x");
-      if (address<16)
-        Serial.print("0");
-      Serial.println(address,HEX);
-    }
-  }
-  if (nDevices == 0) {  // there are no i2c device in those address
-    Serial.println("No I2C devices found\n");
-    return -1;
-  }
-  if (dev_0x20 && dev_0x6B) { // i2c device already found
-    return 0;
-  }
-  return -1;
-}
-
-int flag1 = 0; // to avoid circulating  
+// the loop routine runs over and over again forever:
 void loop() {
   int r;
   
-  if(flag1 == 0)
-  {
-      Serial.print("I2C : ");
-      r = i2c_scan(); //looking for i2c device
-      if (r < 0) {
-        Serial.print("FAIL ");
-        Serial.println(r);
-      } else {
-        flag1 =1;
-        Serial.println("OK");
-      }
+  Wire.beginTransmission(0x20); // Send from machine address and start bit
+  Wire.write(0x01);             // Send register address
+  Wire.write(0x02);             // send data
+  /* 
+   * 0x02 ->spi2gpio
+   * 0x01 ->hdmi_v1
+   * 0x00 ->mipi_camera
+   */
+  Wire.write(0x5A);             // send data
+  Wire.endTransmission();       // send stop bit
 
-      Wire.beginTransmission(0x20); // Send from machine address and start bit
-      Wire.write(0x01);             // Send register address
-      Wire.write(0x02);             // send data
-      /* 
-       * 0x02 ->spi2gpio
-       * 0x01 ->hdmi_v1
-       * 0x00 ->mipi_camera
-       */
-      Wire.write(0x5A);             // send data
-      Wire.endTransmission();       // send stop bit
-   }
-
+  Serial.println("successful");
+ 
   // delay in between reads for stability
   delay(1500);
 }
